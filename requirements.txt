@@ -34,4 +34,3 @@ tqdm==4.62.3
 urllib3==1.26.7
 virtualenv==20.8.1
 Werkzeug==1.0.1
-uwsgi
