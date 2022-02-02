@@ -273,7 +273,7 @@ def mainLoop():
 #api.add_resource(create_graph, '/tags/<string: name>')
 
 if __name__ == "__main__":
-     app.run(port=6800, debug = True)
+     app.run(port=6800, debug = False)
 
 
 mainStart()
