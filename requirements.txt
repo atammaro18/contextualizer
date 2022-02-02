@@ -1,4 +1,3 @@
 Flask
 Flask-RESTful
-sqlite3
 uwsgi 
