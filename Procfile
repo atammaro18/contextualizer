@@ -1,1 +1,1 @@
-web: uswigi uwsgi.ini
+web: python SQL_Py_Graph.py
