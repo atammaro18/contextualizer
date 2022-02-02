@@ -1,1 +1,1 @@
-web: gunicorn SQL_Py_Graph:app
+web: gunicorn --bind 0.0.0.0:$PORT SQL_Py_Graph:app
