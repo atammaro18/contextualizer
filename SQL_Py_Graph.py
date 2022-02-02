@@ -14,7 +14,8 @@ api = Api(app)
 global create_graph                                                                                 # so we can properly end the loop and quit the program upon termination
 create_graph = threading.Event()                                                                    # create a threading event for creating the graph (allows us to refresh the graph's tag data while other processes run)
 
-@app.route('/graph', methods = ['GET'])
+#@app.route('/graph', methods = ['GET'])
+@app.route('/', methods = ['GET'])
 @app.route('/graph/<tag_node>', methods = ['GET'])
 def createGraph():
     global graph
