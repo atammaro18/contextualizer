@@ -1,1 +1,1 @@
-web gunicorn SQL_Py_Graph:app
+web:gunicorn SQL_Py_Graph:app
