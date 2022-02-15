@@ -21,7 +21,7 @@ def createGraph():
     graph = defaultdict(list)                                                                       # create a dict for the graph
     
     #db_file_list = glob.glob('C:\VS Code\OPC_UA_Databases\*.db')                                    # for the file path in the string, store a list of every file
-    db_file_list = glob.glob('C:\Users\atammaro\Desktop\Stefanini\*.db')
+    db_file_list = glob.glob('C:\\Users\\atammaro\\Desktop\\Stefanini\\*.db')
     latest_db = max(db_file_list, key=os.path.getctime)                                             # find the newest file in the list
 
     conn = sqlite3.connect(latest_db)                                                               # connect to the SQL database
