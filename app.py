@@ -22,6 +22,7 @@ def createGraph():
     
     #db_file_list = glob.glob('C:\VS Code\OPC_UA_Databases\*.db')                                    # for the file path in the string, store a list of every file
     # db_file_list = glob.glob('C:\\Users\\atammaro\\Desktop\\Stefanini\\*.db')
+    DATBASE_URL = 'C:\\Users\\atammaro\\Desktop\\Stefanini\\*.db'
     db_file_list = glob.glob('DATABASE_URL')
     latest_db = max(db_file_list, key=os.path.getctime)                                             # find the newest file in the list
 
