@@ -22,6 +22,7 @@ MarkupSafe==1.1.1
 nltk==3.6.7
 numpy==1.22.1
 platformdirs==2.4.0
+psycopg2==2.9.3
 pycodestyle==2.8.0
 PyJWT==1.4.2
 pytz==2020.1
@@ -35,4 +36,3 @@ tqdm==4.62.3
 urllib3==1.26.7
 virtualenv==20.8.1
 Werkzeug==1.0.1
-

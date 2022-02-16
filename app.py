@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_restful import Api
 from collections import defaultdict                                                                 # import dictionary for graph
 import threading                                                                                    # import module so we can properly loop and terminate the loop of createGraph
@@ -15,13 +15,14 @@ global create_graph                                                             
 create_graph = threading.Event()                                                                    # create a threading event for creating the graph (allows us to refresh the graph's tag data while other processes run)
 
 @app.route('/graph', methods = ['GET'])
-@app.route('/graph/<tag_node>', methods = ['GET'])
+
 def createGraph():
     global graph
     graph = defaultdict(list)                                                                       # create a dict for the graph
     
     #db_file_list = glob.glob('C:\VS Code\OPC_UA_Databases\*.db')                                    # for the file path in the string, store a list of every file
-    db_file_list = glob.glob('C:\\Users\\atammaro\\Desktop\\Stefanini\\*.db')
+    # db_file_list = glob.glob('C:\\Users\\atammaro\\Desktop\\Stefanini\\*.db')
+    db_file_list = glob.glob('DATABASE_URL')
     latest_db = max(db_file_list, key=os.path.getctime)                                             # find the newest file in the list
 
     conn = sqlite3.connect(latest_db)                                                               # connect to the SQL database
@@ -74,8 +75,21 @@ def createGraph():
         graph[x][3] = tag_branch_node_value[x][0]                                                   # fourth item is data
         graph[x][4] = tag_branch_node_type[x][0]                                                    # fifth item is data type
         graph[x][5] = time_recieved[x][0]                                                           # sixth is time recieved for the data
-    
+        
+
     return graph
+
+   
+
+# @app.route('/tag/<tag_node>', methods = ['GET'])
+# def id(): 
+#     global graph
+#     createGraph()
+    
+#     for tag in graph:
+#         if tag['tag_node'] == tag:
+#             return tag
+#     return {'Tag Node' : None}, 404
 
 def getUserInputs():
     connections = '\0'                                                                              # initialize connections input variable
