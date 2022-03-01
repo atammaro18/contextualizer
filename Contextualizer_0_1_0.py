@@ -1,29 +1,37 @@
-from flask import Flask, request
-from flask_restful import Api
 from collections import defaultdict                                                                 # import dictionary for graph
 import threading                                                                                    # import module so we can properly loop and terminate the loop of createGraph
 import sys                                                                                          # import for terminating the program
 import sqlite3                                                                                      # import for SQL commands to get tag data for a SQL database
 import glob                                                                                         # used to find the newest database file for OPC data
 import os                                                                                           # used to get OS information
-
-
-app = Flask(__name__)
-api = Api(app)
+#import psycopg2                                                                                    # import needed to connect to a db in Heroku PostgreSQL
 
 global create_graph                                                                                 # so we can properly end the loop and quit the program upon termination
 create_graph = threading.Event()                                                                    # create a threading event for creating the graph (allows us to refresh the graph's tag data while other processes run)
 
-@app.route('/graph', methods = ['GET'])
-@app.route('/graph/<id>')
-def createGraph(id):
+def createGraph():
     global graph
     graph = defaultdict(list)                                                                       # create a dict for the graph
     
-    #db_file_list = glob.glob('C:\VS Code\OPC_UA_Databases\*.db')                                    # for the file path in the string, store a list of every file
-    db_file_list = glob.glob('C:\\Users\\atammaro\\Desktop\\Stefanini\\*.db')
-    latest_db = max(db_file_list, key=os.path.getctime)                                             # find the newest file in the list
+    #hostname = ''
+    #database = ''
+    #username = ''
+    #pwd = ''
+    #port_id = ''
 
+    #DATABASE_URL = os.environ.get(‘DATABASE_URL’)                                                  # get the URL for the Heroku DB 
+    ####### not sure which conn I will need
+    #conn = psycopg2.connect(DATABASE_URL)                                                          # connect to the Heroku DB
+    #conn = psycopg2.connect(host = hostname,
+    #                        dbname = database,
+    #                        user = username,
+    #                        password = pwd,
+    #                        port = port_id)
+    #c = conn.cursor()                                                                              # create a cursor for the Heroku DB
+
+    db_file_list = glob.glob('C:\VS Code\OPC_UA_Databases\*.db')                                    # for the file path in the string, store a list of every file
+    latest_db = max(db_file_list, key=os.path.getctime)                                             # find the newest file in the list
+    
     conn = sqlite3.connect(latest_db)                                                               # connect to the SQL database
     c = conn.cursor()                                                                               # create a cursor for the database
 
@@ -31,7 +39,7 @@ def createGraph(id):
     tag_ip = c.fetchall()                                                                           # store a tuple of all ip's
     tag_ip = list(tag_ip)                                                                           # covert the tuple to a list
 
-    c.execute('SELECT TREE_NODE FROM i')                                                              # select node column from the database
+    c.execute('SELECT TREE_NODE FROM i')                                                            # select node column from the database
     tag_node = c.fetchall()                                                                         # store a tuple of all node locations for tags
     tag_node = list(tag_node)                                                                       # convert the tuple to a list
 
@@ -75,35 +83,15 @@ def createGraph(id):
         graph[x][4] = tag_branch_node_type[x][0]                                                    # fifth item is data type
         graph[x][5] = time_recieved[x][0]                                                           # sixth is time recieved for the data
 
-    for x in range(0, total_tag_count):
-        id = graph[x]  
-        return f'{id}' 
-
-    
-    return graph 
-
-
-   
-
-# @app.route('/tag/<tag_node>', methods = ['GET'])
-# def id(): 
-#     global graph
-#     createGraph()
-    
-#     for tag in graph:
-#         if tag['tag_node'] == tag:
-#             return tag
-#     return {'Tag Node' : None}, 404
-
 def getUserInputs():
     connections = '\0'                                                                              # initialize connections input variable
-    connections = input("\033[1;32mPlease enter the number of connections in the system:\033[0;37m ")           # user enters the number of connections in their system
+    connections = input("Please enter the number of connections in the system: ")                   # user enters the number of connections in their system
     connections = int(connections)                                                                  # convert the string containing the number they entered to an int
     print("\n")
 
     for x in range(0, connections):                                                                 # for each connection (edge) in the system (graph)
-        node_name_src = input("\033[1;32mEnter the tag name of a source node:\033[0;37m ")          # user enters the tag name for a source node of the graph
-        node_name_dest = input("\033[1;32mEnter the tag name of a destination node:\033[0;37m ")    # user enters the tag name for the dest node of that source node
+        node_name_src = input("Enter the tag name of a source node: ")                              # user enters the tag name for a source node of the graph
+        node_name_dest = input("Enter the tag name of a destination node: ")                        # user enters the tag name for the dest node of that source node
         for y in range(0, total_tag_count):                                                         # for each tag in the graph
             if node_name_dest == graph[y][0]:                                                       # make sure then destination node entered exists
                 dest_found = True                                                                   # flag that the dest that was entered exists and can be added to the node
@@ -119,39 +107,39 @@ def getUserInputs():
                 else:
                     src_found = False                                                               # if the src tag entered doesn't exist, flag it so we can throw an error message
         if dest_found == False or src_found == False:
-            print("\033[1;31mInvalid node entered! Connection ignored!\033[0;37m")
+            print("Invalid node entered! Connection ignored!")
         print("")
 
 def printSystemAndNodes():
-    #print("\n\n\033[1;31mList of System Connections (Source Node -> Destination Node):\033[0;37m")
+    #print("\n\nList of System Connections (Source Node -> Destination Node):")
     #for x in range(0, total_tag_count):
-    #    for y in range(tag_field_count, len(graph[x])):                                             # (Source Node Tag Name -> Dest Node Tag Name)
-    #        print(end = "\033[1;36m")
-    #        print(graph[x][0], "->", graph[x][y])                                                   # print the edges of the graph by printing graph[x][0] (source node tag name) followed by each list item...
-    #        print(end = "\033[0;37m")                                                               # ...for node x starting at graph[x][5] (the sixth list item, after the tag data, if it exists)
+    #    for y in range(tag_field_count, len(graph[x])):                                            # (Source Node Tag Name -> Dest Node Tag Name)
+    #        print(end = "")
+    #        print(graph[x][0], "->", graph[x][y])                                                  # print the edges of the graph by printing graph[x][0] (source node tag name) followed by each list item...
+    #        print(end = "")                                                                        # ...for node x starting at graph[x][5] (the sixth list item, after the tag data, if it exists)
     #print("\n")       
                                                                                 
-    print("\033[1;31mList of Graph Data:\033[0;37m")
+    print("List of Graph Data:")
     for x in range(0, total_tag_count):
-        print("\033[1;32mGraph Node", x, ":\033[0;37m")
+        print("Graph Node", x, ":")
         for y in range(0, len(graph[x])):
             if y == 0:
-                print("\033[1;36mTag IP:", graph[x][y],"\033[0;37m")                                # print the first list item (ip) for graph entry x (node x)
+                print("Tag IP:", graph[x][y])                                                       # print the first list item (ip) for graph entry x (node x)
             if y == 1:
-                print("\033[1;36mTag Tree Node:", graph[x][y], end = "\033[0;37m\n")                # print the second list item (tag tree node number) for graph entry x (node x)
+                print("Tag Tree Node:", graph[x][y], end = "\n")                                    # print the second list item (tag tree node number) for graph entry x (node x)
             if y == 2:
-                print("\033[1;36mBranch Node:", graph[x][y], end = "\033[0;37m\n")                  # print the third list item (branch node number) for graph entry x (node x)
+                print("Branch Node:", graph[x][y], end = "\n")                                      # print the third list item (branch node number) for graph entry x (node x)
             if y == 3:
-                print("\033[1;36mBranch Node Value:", graph[x][y], end = "\033[0;37m\n")            # print the fourth list item  (branch node value) for graph entry x (node x)
+                print("Branch Node Value:", graph[x][y], end = "\n")                                # print the fourth list item  (branch node value) for graph entry x (node x)
             if y == 4:
-                print("\033[1;36mBranch Node Data Type:", graph[x][y], end = "\033[0;37m\n")        # print the fifth  list item (data type) for graph entry x (node x)
+                print("Branch Node Data Type:", graph[x][y], end = "\n")                            # print the fifth  list item (data type) for graph entry x (node x)
             if y == 5:
-                print("\033[1;36mTime Data Recieved:", graph[x][y], end = "\033[0;37m\n")           # print the sixth list item (time data recieved) for graph entry x (node x)
+                print("Time Data Recieved:", graph[x][y], end = "\n")                               # print the sixth list item (time data recieved) for graph entry x (node x)
             if y == tag_field_count:
-                print("\033[1;36mDestination Node Tags:", end = "")                                 # print a list of all dest nodes related to the tag
+                print("Destination Node Tags:", end = "")                                           # print a list of all dest nodes related to the tag
                 for y in range (tag_field_count, len(graph[x])):
                     print(" ", graph[x][y], end = "")
-                print("\033[0;37m")
+                print("")
         print("")
 
 def storeNodesForReprint():
@@ -203,17 +191,17 @@ def addConnection():
                 else:
                     src_found = False                                                               # if the src tag entered doesn't exist, flag it so we can throw an error message
         if dest_found == False or src_found == False:
-            print("\033[1;31mInvalid node entered! Connection ignored!\033[0;37m")
+            print("Invalid node entered! Connection ignored!")
 
 def removeConnection():
     connections = '\0'                                                                              # initialize connections input variable
-    connections = input("\n\033[1;32mPlease enter the number of connections to be removed from the system:\033[0;37m ")           # user enters the number of connections in their system
+    connections = input("\nPlease enter the number of connections to be removed from the system: ")           # user enters the number of connections in their system
     connections = int(connections)                                                                  # convert the string containing the number they entered to an int
     print("\n")
 
     for x in range(0, connections):                                                                 # for each connection (edge) in the system (graph)
-        node_name_src = input("\033[1;32mEnter the tag name of a source node:\033[0;37m ")          # user enters the tag name for a source node of the graph
-        node_name_dest = input("\033[1;32mEnter the tag name of a destination node:\033[0;37m ")    # user enters the tag name for the dest node of that source node
+        node_name_src = input("Enter the tag name of a source node: ")                              # user enters the tag name for a source node of the graph
+        node_name_dest = input("Enter the tag name of a destination node: ")                        # user enters the tag name for the dest node of that source node
         for y in range(0, total_tag_count):                                                         # for each tag in the graph
             if node_name_dest == graph[y][0]:                                                       # make sure then destination node entered exists
                 dest_found = True                                                                   # flag that the dest that was entered exists and can be added to the node
@@ -232,46 +220,46 @@ def removeConnection():
                 else:
                     src_found = False                                                               # if the src tag entered doesn't exist, flag it so we can throw an error message
         if dest_found == False or src_found == False:
-            print("\033[1;31mInvalid node entered! Connection ignored!\033[0;37m")
+            print("Invalid node entered! Connection ignored!")
 
 def mainStart():
         createGraph()
 
-        timer_graph = threading.Timer(1.0, createGraph)                                                 # timer to refresh graph data periodically
-        timer_graph.start()                                                                             # start the timer
+        timer_graph = threading.Timer(1.0, createGraph)                                             # timer to refresh graph data periodically
+        timer_graph.start()                                                                         # start the timer
 
-        # getUserInputs()                                                                               # Removing this from runtime for now for ease of use, might add back later if we have a use for it
+        # getUserInputs()                                                                           # Removing this from runtime for now for ease of use, might add back later if we have a use for it
         printSystemAndNodes()
 
 def mainLoop():
     while True:
-        print("\n\033[1;31mEnter One of the Following Inputs to Continue:\n")
-        print("\033[1;32mEnter: Refresh and Re-Print Graph Data")
-        # print("\033[1;32m'Add': Add a Connection to Existing Connections")
-        # print("\033[1;32m'Remove': Remove a Connection from Existing Connections")
-        # print("\033[1;32m'Reset': Wipe Connections, Enter a New Set of Connections, Refresh Data, and Re-Print")
-        print("\033[1;32m'Q': End the Program\033[0;37m\n")
+        print("\nEnter One of the Following Inputs to Continue:\n")
+        print("Enter: Refresh and Re-Print Graph Data")
+        # print("'Add': Add a Connection to Existing Connections")
+        # print("'Remove': Remove a Connection from Existing Connections")
+        # print("'Reset': Wipe Connections, Enter a New Set of Connections, Refresh Data, and Re-Print")
+        print("'Q': End the Program\n")
         
         user_edit_nodes = input()
         
         #if user_edit_nodes.casefold() == "add":
-        #    addConnection()                                                                         # add however many connections the user wants to add to the graph
-        #    printSystemAndNodes()                                                                   # reprint graph with most recent data and new connections
+        #    addConnection()                                                                        # add however many connections the user wants to add to the graph
+        #    printSystemAndNodes()                                                                  # reprint graph with most recent data and new connections
 
         #if user_edit_nodes.casefold() == "remove":
-        #    removeConnection()                                                                      # delete however many connections the user wants to delete from the graph
-        #    printSystemAndNodes()                                                                   # reprint graph with most recent data and new connections
+        #    removeConnection()                                                                     # delete however many connections the user wants to delete from the graph
+        #    printSystemAndNodes()                                                                  # reprint graph with most recent data and new connections
         
-        #if user_edit_nodes.casefold() == "reset":                                                   # if the user wants to reset their connections
+        #if user_edit_nodes.casefold() == "reset":                                                  # if the user wants to reset their connections
         #    print("\n")
-        #    graph.clear()                                                                           # completely remove everything from the graph
-        #    createGraph()                                                                           # update the graph's node data
-        #    # getUserInputs()                                                                       # get new connections from the user, removing this from runtime for now for ease of use, might add back later if we have a use for it
-        #    printSystemAndNodes()                                                                   # reprint graph with most recent data and new connections
+        #    graph.clear()                                                                          # completely remove everything from the graph
+        #    createGraph()                                                                          # update the graph's node data
+        #    # getUserInputs()                                                                      # get new connections from the user, removing this from runtime for now for ease of use, might add back later if we have a use for it
+        #    printSystemAndNodes()                                                                  # reprint graph with most recent data and new connections
 
         if user_edit_nodes.casefold() == "q":                                                       # if the user enters q or Q
             create_graph.clear()                                                                    # stop graph update loop
-            sys.exit("\033[1;31m\n\nProgram Ended!\033[0;37m")                                      # end the program
+            sys.exit("\n\nProgram Ended!")                                                          # end the program
         
         
         if user_edit_nodes.casefold() == "":                                                        # if the user ONLY pressed enter, with no other inputs i.e. space or letters
@@ -279,21 +267,14 @@ def mainLoop():
             # ...to do that we need to store all of the user's connections before we wipe the graph. we want to reprint the graph like this in case there are any tags...
             # ...that were added or removed. as long as the tag names for nodes with connections don't change the graph will reprint without issues even if there are new or deleted tags...
             # ...between reprints. if any tag names were changed, the user should enter "edit" anyway
-            #storeNodesForReprint()                                                                  # store the user's connections before wiping the graph                   
+            #storeNodesForReprint()                                                                 # store the user's connections before wiping the graph                   
             graph.clear()                                                                           # wipe the graph entirely
             createGraph()                                                                           # update the graph with most recent data from the CSV
-            #reinsertNodes()                                                                         # reinsert the user's connections in the graph
+            #reinsertNodes()                                                                        # reinsert the user's connections in the graph
             printSystemAndNodes()                                                                   # reprint the data lists with the original connections and updated data
 
         else:                                                                                       # if the user doesn't input what we want, prompt again
             continue
 
-#api.add_resource(create_graph, '/tags/<string: name>')
-
-if __name__ == "__main__":
-     app.run(port=6800, debug = True)
-
-
 mainStart()
 mainLoop()
-
